@@ -1,0 +1,60 @@
+    1  CUDA_VISIBLE_DEVICES=0 python generate.py --ref_path path/to/reference/image     --aud_path path/to/audio     --seed 15      --a_cfg_scale 2     --e_cfg_scale 1     --ckpt_path ./checkpoints/float.pth    --no_crop  
+    2  cd /mnt/cfs1/dongfangzhou/float/
+    3  CUDA_VISIBLE_DEVICES=0 python generate.py --ref_path path/to/reference/image     --aud_path path/to/audio     --seed 15      --a_cfg_scale 2     --e_cfg_scale 1     --ckpt_path ./checkpoints/float.pth    --no_crop  
+    4  pip install librosa -i https://mirrors.aliyun.com/pypi/simple/ --trusted-host mirrors.aliyun.com
+    5  CUDA_VISIBLE_DEVICES=0 python generate.py --ref_path path/to/reference/image     --aud_path path/to/audio     --seed 15      --a_cfg_scale 2     --e_cfg_scale 1     --ckpt_path ./checkpoints/float.pth    --no_crop  
+    6  pip install face_alignment -i https://mirrors.aliyun.com/pypi/simple/ --trusted-host mirrors.aliyun.com
+    7  CUDA_VISIBLE_DEVICES=0 python generate.py --ref_path path/to/reference/image     --aud_path path/to/audio     --seed 15      --a_cfg_scale 2     --e_cfg_scale 1     --ckpt_path ./checkpoints/float.pth    --no_crop  
+    8  sed -i 's|http://.*debian.org|http://mirrors.tuna.tsinghua.edu.cn|g' /etc/apt/sources.list && apt-get update && apt-get install -y libglib2.0-0
+    9  CUDA_VISIBLE_DEVICES=0 python generate.py --ref_path path/to/reference/image     --aud_path path/to/audio     --seed 15      --a_cfg_scale 2     --e_cfg_scale 1     --ckpt_path ./checkpoints/float.pth    --no_crop  
+   10  pip uninstall albumentations albucore -y
+   11  pip install --upgrade albumentations -i https://mirrors.aliyun.com/pypi/simple/ --trusted-host mirrors.aliyun.com
+   12  pip show albumentations albucore
+   13  CUDA_VISIBLE_DEVICES=0 python generate.py --ref_path path/to/reference/image     --aud_path path/to/audio     --seed 15      --a_cfg_scale 2     --e_cfg_scale 1     --ckpt_path ./checkpoints/float.pth    --no_crop  
+   14  history
+   15  pip install transformers -i https://mirrors.aliyun.com/pypi/simple/ --trusted-host mirrors.aliyun.com
+   16  CUDA_VISIBLE_DEVICES=0 python generate.py --ref_path path/to/reference/image     --aud_path path/to/audio     --seed 15      --a_cfg_scale 2     --e_cfg_scale 1     --ckpt_path ./checkpoints/float.pth    --no_crop  
+   17  pip install torchdiffeq -i https://mirrors.aliyun.com/pypi/simple/ --trusted-host mirrors.aliyun.com
+   18  CUDA_VISIBLE_DEVICES=0 python generate.py --ref_path path/to/reference/image     --aud_path path/to/audio     --seed 15      --a_cfg_scale 2     --e_cfg_scale 1     --ckpt_path ./checkpoints/float.pth    --no_crop  
+   19  pip install timm -i https://mirrors.aliyun.com/pypi/simple/ --trusted-host mirrors.aliyun.com
+   20  CUDA_VISIBLE_DEVICES=0 python generate.py --ref_path path/to/reference/image     --aud_path path/to/audio     --seed 15      --a_cfg_scale 2     --e_cfg_scale 1     --ckpt_path ./checkpoints/float.pth    --no_crop  
+   21  nvidia-smi
+   22  CUDA_VISIBLE_DEVICES=1 python generate.py --ref_path path/to/reference/image     --aud_path path/to/audio     --seed 15      --a_cfg_scale 2     --e_cfg_scale 1     --ckpt_path ./checkpoints/float.pth    --no_crop  
+   23  history
+   24  CUDA_VISIBLE_DEVICES=1 python generate.py --ref_path assets/sam_altman.webp     --aud_path assets/aud-sample-vs-1.wav     --seed 15      --a_cfg_scale 2     --e_cfg_scale 1     --ckpt_path ./checkpoints/float.pth    --no_crop
+   25  CUDA_VISIBLE_DEVICES=1 python generate.py --ref_path assets/sam_altman.webp     --aud_path assets/aud-sample-vs-1.wav     --seed 15      --a_cfg_scale 2     --e_cfg_scale 1     --ckpt_path ./checkpoints/float.pth    --no_crop
+   26  sed -i 's|http://.*debian.org|http://mirrors.tuna.tsinghua.edu.cn|g' /etc/apt/sources.list &&     apt-get update && apt-get install -y libsndfile1
+   27  CUDA_VISIBLE_DEVICES=1 python generate.py --ref_path assets/sam_altman.webp     --aud_path assets/aud-sample-vs-1.wav     --seed 15      --a_cfg_scale 2     --e_cfg_scale 1     --ckpt_path ./checkpoints/float.pth    --no_crop
+   28   pip install av==12.0.0 -i https://mirrors.aliyun.com/pypi/simple/ --trusted-host mirrors.aliyun.com
+   29  history
+   30  CUDA_VISIBLE_DEVICES=1 python generate.py --ref_path assets/sam_altman.webp     --aud_path assets/aud-sample-vs-1.wav     --seed 15      --a_cfg_scale 2     --e_cfg_scale 1     --ckpt_path ./checkpoints/float.pth    --no_crop
+   31  ls
+   32  cd assets/
+   33  ls
+   34  CUDA_VISIBLE_DEVICES=1 python generate.py --ref_path assets/sam_altman.webp     --aud_path assets/aud-sample-vs-1.wav     --seed 15      --a_cfg_scale 2     --e_cfg_scale 1     --ckpt_path ./checkpoints/float.pth    --no_crop
+   35  cd ..
+   36  CUDA_VISIBLE_DEVICES=1 python generate.py --ref_path assets/sam_altman.webp     --aud_path assets/aud-sample-vs-1.wav     --seed 15      --a_cfg_scale 2     --e_cfg_scale 1     --ckpt_path ./checkpoints/float.pth    --no_crop
+   37  cd results/
+   38  ls
+   39  ls
+   40  ls
+   41  ls
+   42  cd ..
+   43  cd result
+   44  ls
+   45  CUDA_VISIBLE_DEVICES=1 python generate.py     --ref_path assets/sam_altman.webp     --aud_path assets/aud-sample-vs-1.wav     --seed  15     --a_cfg_scale 2     --e_cfg_scale 1     --ckpt_path ./checkpoints/float.pth  
+   46  cd ..
+   47  CUDA_VISIBLE_DEVICES=1 python generate.py     --ref_path assets/sam_altman.webp     --aud_path assets/aud-sample-vs-1.wav     --seed  15     --a_cfg_scale 2     --e_cfg_scale 1     --ckpt_path ./checkpoints/float.pth  
+   48  cd results
+   49  ls
+   50  find . -name "*.mp4"
+   51  find . -name "*.mp4"
+   52     ffmpeg -version
+   53  history
+   54  sed -i 's|http://.*debian.org|http://mirrors.tuna.tsinghua.edu.cn|g' /etc/apt/sources.list &&     apt-get update && apt-get install -y ffmpeg
+   55     ffmpeg -version
+   56  CUDA_VISIBLE_DEVICES=1 python generate.py     --ref_path assets/sam_altman.webp     --aud_path assets/aud-sample-vs-1.wav     --seed  15     --a_cfg_scale 2     --e_cfg_scale 1     --ckpt_path ./checkpoints/float.pth  
+   57  cd ..
+   58* CUDA_VISIBLE_DEVICES=1 python generate.py     --ref_path assets/sam_altman.webp     --aud_path assets/aud-sample-vs-1.wav     --seed  15     --a_cfg_scale 2     --e_cfg_scale 1     --ckpt_path ./chec
+   59  CUDA_VISIBLE_DEVICES=1 python generate.py --ref_path assets/hari.jpg     --aud_path assets/aud-sample-vs-1.wav     --seed 15      --a_cfg_scale 2     --e_cfg_scale 1     --ckpt_path ./checkpoints/float.pth    --no_crop 
+   60  history

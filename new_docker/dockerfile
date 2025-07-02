@@ -1,0 +1,43 @@
+# FROM --platform=linux/amd64 docker.m.daocloud.io/nvidia/cuda:11.8.0-base-ubuntu20.04
+FROM float:5
+# 直接设置时区文件（无需交互）
+# RUN ln -fs /usr/share/zoneinfo/Asia/Shanghai /etc/localtime && \
+#     echo "Asia/Shanghai" > /etc/timezone
+# RUN mkdir /app
+# 复制脚本到容器
+
+
+
+COPY ./start.sh /app/start.sh
+COPY ./sleep.sh /app/sleep.sh
+# COPY HunyuanVideo-Avatar /app/HunyuanVideo-Avatar
+# COPY Python-3.10.0.tgz /app/Python-3.10.0.tgz
+WORKDIR /app
+# 运行安装脚本
+RUN chmod +x /app/sleep.sh
+RUN chmod +x /app/start.sh 
+# RUN /app/start.sh
+
+
+# RUN apt-get update && apt-get install -y libgl1-mesa-glx
+# RUN sed -i 's|http://.*debian.org|http://mirrors.tuna.tsinghua.edu.cn|g' /etc/apt/sources.list && \
+#     apt-get update && apt-get install -y libgl1-mesa-glx
+
+RUN pip install librosa -i https://mirrors.aliyun.com/pypi/simple/ --trusted-host mirrors.aliyun.com
+RUN pip install face_alignment -i https://mirrors.aliyun.com/pypi/simple/ --trusted-host mirrors.aliyun.com
+RUN sed -i 's|http://.*debian.org|http://mirrors.tuna.tsinghua.edu.cn|g' /etc/apt/sources.list && apt-get update && apt-get install -y libglib2.0-0
+RUN pip uninstall albumentations albucore -y
+RUN pip install --upgrade albumentations -i https://mirrors.aliyun.com/pypi/simple/ --trusted-host mirrors.aliyun.com
+RUN pip install transformers -i https://mirrors.aliyun.com/pypi/simple/ --trusted-host mirrors.aliyun.com
+RUN pip install torchdiffeq -i https://mirrors.aliyun.com/pypi/simple/ --trusted-host mirrors.aliyun.com
+RUN pip install timm -i https://mirrors.aliyun.com/pypi/simple/ --trusted-host mirrors.aliyun.com
+RUN sed -i 's|http://.*debian.org|http://mirrors.tuna.tsinghua.edu.cn|g' /etc/apt/sources.list &&     apt-get update && apt-get install -y libsndfile1
+RUN pip install av==12.0.0 -i https://mirrors.aliyun.com/pypi/simple/ --trusted-host mirrors.aliyun.com
+RUN sed -i 's|http://.*debian.org|http://mirrors.tuna.tsinghua.edu.cn|g' /etc/apt/sources.list &&     apt-get update && apt-get install -y ffmpeg
+
+ENTRYPOINT ["./sleep.sh"]
+# 设置工作目录
+
+
+# 示例运行命令（实际使用时可能需要覆盖）
+# CMD ["python3.10", "lite_avatar.py", "--data_dir", "./data/preload", "--audio_file", "asr_example.wav", "--result_dir", "result"]

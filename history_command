@@ -1,0 +1,19 @@
+    1  cd /mnt/
+    2  ls
+    3  cd cfs1/dongfangzhou/
+    4  ls
+    5  cd float/
+    6  python version
+    7  python
+    8  pip install torch==2.0.1 torchvision==0.15.2 torchaudio==2.0.2 --index-url https://download.pytorch.org/whl/cu118
+    9  pip install networkx==2.6.3
+   10  pip install networkx==2.6.3
+   11  pip install networkx==2.6.3
+   12  pip install networkx==2.6.3 -i https://mirrors.aliyun.com/pypi/simple/ --trusted-host mirrors.aliyun.com
+   13  pip install torch==2.0.1 torchvision==0.15.2 torchaudio==2.0.2 --index-url https://download.pytorch.org/whl/cu118
+   14       pip install -r requirements.txt -i https://mirrors.aliyun.com/pypi/simple/ --trusted-host mirrors.aliyun.com
+   15  pip install numpy=1.24.4
+   16  pip install numpy==1.24.4
+   17  pip install numpy==1.24.4  -i https://mirrors.aliyun.com/pypi/simple/ --trusted-host mirrors.aliyun.com
+   18  pip install albumentations==1.4.15  -i https://mirrors.aliyun.com/pypi/simple/ --trusted-host mirrors.aliyun.com
+   19  history
