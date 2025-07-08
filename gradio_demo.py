@@ -49,16 +49,16 @@ emo_list = ['no-emo', 'angry', 'disgust', 'fear', 'happy', 'neutral', 'sad', 'su
 demo = gr.Interface(
     fn=generate_avatar,
     inputs=[
-        gr.Image(type="pil", label="人物图片"),
-        gr.Audio(type="filepath", label="音频"),
+        gr.Image(type="pil", value="./assets/kun2.jpg",label="人物图片"),
+        gr.Audio(type="filepath",value="./assets/test.m4a",label="音频"),
         gr.Dropdown(choices=emo_list, value="no-emo", label="情感"),
         gr.Number(value=15, label="随机种子"),
-        gr.Number(value=2.0, label="a_cfg_scale"),
-        gr.Number(value=1.0, label="e_cfg_scale"),
+        gr.Number(value=2.0, label="口型和音频同步的权重"),
+        gr.Number(value=1.0, label="情感等级，越大越夸张，建议小于15"),
         gr.Checkbox(label="跳过裁剪(no_crop)")
     ],
     outputs=gr.Video(label="生成的视频"),
-    title="Float数字人口型生成Demo",
+    title="Float数字人口型生成 by Noah Dong",
     description="上传人物图片和音频，选择情感等参数，生成匹配口型的数字人视频。"
 )
 
@@ -70,5 +70,17 @@ def get_latest_video(results_dir="./results"):
     return latest_video
 
 if __name__ == "__main__":
-    demo.launch(server_name="0.0.0.0", server_port=7860)
-
+    demo.launch(
+        server_name="0.0.0.0",
+        server_port=7860,
+    )
+    #     demo.launch(
+    #     server_name="0.0.0.0",
+    #     server_port=7860,
+    #     ssl_certfile="./ssl/cert.pem",
+    #     ssl_keyfile="./ssl/key.pem",
+    #     show_error=True,
+    #     inbrowser=False,   # 关键参数，关闭自动打开浏览器
+    #     ssl_verify=False,
+    #     prevent_thread_lock=True  # 可选，防止阻塞
+    # )

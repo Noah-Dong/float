@@ -35,6 +35,7 @@ RUN sed -i 's|http://.*debian.org|http://mirrors.tuna.tsinghua.edu.cn|g' /etc/ap
 RUN pip install av==12.0.0 -i https://mirrors.aliyun.com/pypi/simple/ --trusted-host mirrors.aliyun.com
 RUN sed -i 's|http://.*debian.org|http://mirrors.tuna.tsinghua.edu.cn|g' /etc/apt/sources.list &&     apt-get update && apt-get install -y ffmpeg
 
+RUN pip install gradio -i https://mirrors.aliyun.com/pypi/simple/ --trusted-host mirrors.aliyun.com
 ENTRYPOINT ["./sleep.sh"]
 # 设置工作目录
 
