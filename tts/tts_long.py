@@ -32,8 +32,8 @@ MESSAGE_TYPE_SPECIFIC_FLAGS = {0: "no sequence number", 1: "sequence number > 0"
 MESSAGE_SERIALIZATION_METHODS = {0: "no serialization", 1: "JSON", 15: "custom type"}
 MESSAGE_COMPRESSIONS = {0: "no compression", 1: "gzip", 15: "custom compression method"}
 
-appid = "2020231942"
-token = "cXWnhxUvkjk3hikTYJNuaDaYJ53JiIgT"
+appid = "xxxx"
+token = "xxxxxxxxxxx"
 cluster = "volcano_tts"
 # voice_type = "zh_female_meilinvyou_moon_bigtts"
 host = "openspeech.bytedance.com"
