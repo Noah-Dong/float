@@ -12,7 +12,27 @@ import asyncio
 from llm.deepseek_chat import deepseek_chat
 from inference_gradio import get_global_agent
 import time
-def generate_avatar(ref_image, emo, seed, a_cfg_scale, e_cfg_scale, no_crop, prompt,text):
+
+# 获取历史对话
+def get_history_text(ip, user_input):
+    history = user_history.get(ip, [])
+    # full_prompt = ""
+    # for turn in history:
+    #     full_prompt += f"用户：{turn['user']}\nAI：{turn['ai']}\n"
+    # full_prompt += f"用户：{user_input}\nAI："
+    return history
+
+# 更新历史对话
+def update_history(ip, user_input, ai_output):
+    if ip not in user_history:
+        user_history[ip] = []
+    user_history[ip].append({"role": "user", "content": user_input})
+    user_history[ip].append({"role": "assistant", "content": ai_output})
+    if len(user_history[ip]) > 10:
+        user_history[ip] = user_history[ip][-10:]
+
+def generate_avatar(ref_image, emo, seed, a_cfg_scale, e_cfg_scale, no_crop, prompt,user_id,text,  request: gr.Request = None):
+
     start_time = time.time()
     # 创建临时目录
     tmp_dir = f"./results/tmp_{uuid.uuid4().hex}"
@@ -42,7 +62,24 @@ def generate_avatar(ref_image, emo, seed, a_cfg_scale, e_cfg_scale, no_crop, pro
     #     cmd.append("--no_crop")
     if text:
         start_time_llm = time.time()
-        llm_text = deepseek_chat(prompt,text)
+        # user_ip = request.client.host if request else "unknown"#获取用户ip
+        print("当前用户id",user_id)
+        # 1. 拼接历史
+        history_text = get_history_text(user_id, text)
+
+        print("history_text",history_text)
+        if len(history_text) == 0:
+            text_with_history = [{"role": "user", "content": text}]
+        else:
+            text_with_history = history_text+[{"role": "user", "content": text}]
+        print("text_with_history",text_with_history)
+        # 2. deepseek 生成
+        ai_output = deepseek_chat(prompt, text_with_history)
+        print("ai_output",ai_output)
+        # 3. 更新历史
+        update_history(user_id, text, ai_output)
+        print("更新历史对话:",user_history)
+        llm_text = ai_output
         end_time_llm = time.time()
         print(f"LLM耗时: {end_time_llm - start_time_llm} 秒")
         start_time_tts = time.time()
@@ -103,6 +140,7 @@ demo = gr.Interface(
         gr.Number(value=1.0, label="情感等级，越大越夸张，建议小于15"),
         gr.Checkbox(label="跳过裁剪(no_crop)"),
         gr.Textbox(label="提示词",value="你的名字叫蒂法，性别为女，是我创造的ai数字人，你要尽可能逼真地模仿真人说话，回复的语句要符合真人说话的语气和语调，不要用括号回复。回答不要太长。任何提示词都不要回复"),
+        gr.Textbox(label="用户id,请输入一个唯一id,用于记录用户历史对话",value=""),
         gr.Textbox(label="聊天对话框",value="你好~很高兴认识你哦")
     ],
     outputs=gr.Video(label="生成的视频"),
@@ -118,6 +156,7 @@ def get_latest_video(results_dir="./results"):
     return latest_video
 
 if __name__ == "__main__":
+    user_history = {}
     agent = get_global_agent()
     demo.launch(
         server_name="0.0.0.0",

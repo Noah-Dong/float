@@ -158,7 +158,7 @@ def parse_response(res, file):
 # 分句函数
 def split_text(text):
     # 按中文句号、问号、感叹号、英文句号等分割
-    return [s for s in re.split(r'[。！？!.]', text) if s.strip()]
+    return [s for s in re.split(r'[。！？!.~() ]', text) if s.strip()]
 
 async def batch_query(long_text):
     sentences = split_text(long_text)
