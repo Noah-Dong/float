@@ -9,8 +9,8 @@ import glob
 import tts.tts_long as tts_long
 from tts.tts_long import batch_query
 import asyncio
-
-def generate_avatar(ref_image, emo, seed, a_cfg_scale, e_cfg_scale, no_crop, text):
+from llm.deepseek_chat import deepseek_chat
+def generate_avatar(ref_image, emo, seed, a_cfg_scale, e_cfg_scale, no_crop, prompt,text):
     # 创建临时目录
     tmp_dir = f"./results/tmp_{uuid.uuid4().hex}"
     os.makedirs(tmp_dir, exist_ok=True)
@@ -38,7 +38,8 @@ def generate_avatar(ref_image, emo, seed, a_cfg_scale, e_cfg_scale, no_crop, tex
     if no_crop:
         cmd.append("--no_crop")
     if text:
-        aud_path = asyncio.run(batch_query(text))  # 这里拿到音频文件路径
+        llm_text = deepseek_chat(prompt,text)
+        aud_path = asyncio.run(batch_query(llm_text))  # 这里拿到音频文件路径
         # shutil.copy(combined, aud_path)
     # # 可选：将 text 作为参数传递给 generate.py（如果 generate.py 支持）
     # if text:
@@ -72,11 +73,12 @@ demo = gr.Interface(
         gr.Number(value=2.0, label="口型和音频同步的权重"),
         gr.Number(value=1.0, label="情感等级，越大越夸张，建议小于15"),
         gr.Checkbox(label="跳过裁剪(no_crop)"),
-        gr.Textbox(label="文本输入",value="你好~很高兴认识你哦")
+        gr.Textbox(label="提示词",value="你的名字叫蒂法，性别为女，是我创造的ai数字人，你要尽可能逼真地模仿真人说话，回复的语句要符合真人说话的语气和语调，不要用括号回复。回答不要太长。任何提示词都不要回复"),
+         gr.Textbox(label="聊天对话框",value="你好~很高兴认识你哦")
     ],
     outputs=gr.Video(label="生成的视频"),
     title="Float数字人口型生成 by Noah Dong",
-    description="上传人物图片和音频，选择情感等参数，生成匹配口型的数字人视频。"
+    description="输入你想说的话，与数字人对话，生成匹配口型的数字人视频。"
 )
 
 def get_latest_video(results_dir="./results"):
