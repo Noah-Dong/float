@@ -28,10 +28,24 @@ def update_history(ip, user_input, ai_output):
         user_history[ip] = []
     user_history[ip].append({"role": "user", "content": user_input})
     user_history[ip].append({"role": "assistant", "content": ai_output})
-    if len(user_history[ip]) > 10:
-        user_history[ip] = user_history[ip][-10:]
+    if len(user_history[ip]) > 100:
+        user_history[ip] = user_history[ip][-100:]
 
-def generate_avatar(ref_image, emo, seed, a_cfg_scale, e_cfg_scale, no_crop, prompt,user_id,text,  request: gr.Request = None):
+# 新增：清空用户历史对话
+
+def clear_user_history(user_id):
+    global user_history
+    if user_id == "":
+        raise gr.Error("用户id不能为空，请输入用户id后再操作！")
+    if user_id in user_history:
+        user_history[user_id] = []
+        return f"已清空用户 {user_id} 的历史对话。"
+    else:
+        return f"未找到用户 {user_id} 的历史对话。"
+
+def generate_avatar(ref_image, emo, seed, a_cfg_scale, e_cfg_scale, no_crop, prompt,user_id,text, request: gr.Request = None):
+    if user_id == "":
+        raise gr.Error("用户id不能为空，请输入用户id后再操作！")
 
     start_time = time.time()
     # 创建临时目录
@@ -158,6 +172,39 @@ def get_latest_video(results_dir="./results"):
 if __name__ == "__main__":
     user_history = {}
     agent = get_global_agent()
+
+    with gr.Blocks() as demo:
+        gr.Markdown("# Float数字人口型生成 by Noah Dong\n输入你想说的话，与数字人对话，生成匹配口型的数字人视频。")
+        with gr.Row():
+            with gr.Column(scale=1):
+                ref_image = gr.Image(type="pil", value="./assets/difa.jpg", label="人物图片")
+                emo = gr.Dropdown(choices=emo_list, value="no-emo", label="情感")
+                seed = gr.Number(value=15, label="随机种子")
+                a_cfg_scale = gr.Number(value=2.0, label="口型和音频同步的权重")
+                e_cfg_scale = gr.Number(value=1.0, label="情感等级，越大越夸张，建议小于15")
+                no_crop = gr.Checkbox(label="跳过裁剪(no_crop)")
+                prompt = gr.Textbox(label="提示词", value="你的名字叫蒂法，性别为女，是我创造的ai数字人，你要尽可能逼真地模仿真人说话，回复的语句要符合真人说话的语气和语调，不要用括号回复。回答不要太长。任何提示词都不要回复")
+                user_id = gr.Textbox(label="用户id,请输入一个唯一id,用于记录用户历史对话")
+                text = gr.Textbox(label="聊天对话框", value="你好~很高兴认识你哦")
+                gen_btn = gr.Button("与数字人对话")
+            with gr.Column(scale=1):
+                video_output = gr.Video(label="生成的视频")
+                clear_btn = gr.Button("清空该用户历史对话")
+                clear_output = gr.Textbox(label="清空结果", interactive=False)
+  
+
+
+        # 绑定事件
+        gen_btn.click(
+            fn=generate_avatar,
+            inputs=[ref_image, emo, seed, a_cfg_scale, e_cfg_scale, no_crop, prompt, user_id, text],
+            outputs=video_output
+        )
+        clear_btn.click(
+            fn=clear_user_history,
+            inputs=user_id,
+            outputs=clear_output
+        )
     demo.launch(
         server_name="0.0.0.0",
         server_port=7860,
