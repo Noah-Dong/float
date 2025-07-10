@@ -6,8 +6,11 @@ import os
 import uuid
 import shutil
 import glob
+import tts.tts_long as tts_long
+from tts.tts_long import batch_query
+import asyncio
 
-def generate_avatar(ref_image, aud_file, emo, seed, a_cfg_scale, e_cfg_scale, no_crop):
+def generate_avatar(ref_image, emo, seed, a_cfg_scale, e_cfg_scale, no_crop, text):
     # 创建临时目录
     tmp_dir = f"./results/tmp_{uuid.uuid4().hex}"
     os.makedirs(tmp_dir, exist_ok=True)
@@ -17,13 +20,13 @@ def generate_avatar(ref_image, aud_file, emo, seed, a_cfg_scale, e_cfg_scale, no
 
     # 保存上传的文件
     ref_image.save(ref_path)
-    shutil.copy(aud_file, aud_path)
+    # shutil.copy(aud_file, aud_path)
 
     # 构建命令
     cmd = [
         "python", "generate.py",
         "--ref_path", ref_path,
-        "--aud_path", aud_path,
+        # "--aud_path", aud_path,
         "--seed", str(seed),
         "--a_cfg_scale", str(a_cfg_scale),
         "--e_cfg_scale", str(e_cfg_scale),
@@ -31,12 +34,23 @@ def generate_avatar(ref_image, aud_file, emo, seed, a_cfg_scale, e_cfg_scale, no
         "--res_dir",tmp_dir
     ]
     if emo != 'no-emo':
-        cmd += ["--emo", emo]
+        cmd += ["--emo", str(emo)]
     if no_crop:
         cmd.append("--no_crop")
-
+    if text:
+        aud_path = asyncio.run(batch_query(text))  # 这里拿到音频文件路径
+        # shutil.copy(combined, aud_path)
+    # # 可选：将 text 作为参数传递给 generate.py（如果 generate.py 支持）
+    # if text:
+    #     cmd += ["--text", text]
+    # if text:
+    # aud_path = tts_long.batch_query(text)
+    cmd += ["--aud_path", aud_path]
+        # combined.export(aud_path, format="wav")
+    
     # 调用生成脚本
     try:
+        print(cmd)
         subprocess.run(cmd, check=True)
         out_path = get_latest_video(tmp_dir)
         return out_path
@@ -52,12 +66,13 @@ demo = gr.Interface(
     fn=generate_avatar,
     inputs=[
         gr.Image(type="pil", value="./assets/kun2.jpg",label="人物图片"),
-        gr.Audio(type="filepath",value="./assets/test.m4a",label="音频"),
+        # gr.Audio(type="filepath",value="./assets/test.m4a",label="音频"),
         gr.Dropdown(choices=emo_list, value="no-emo", label="情感"),
         gr.Number(value=15, label="随机种子"),
         gr.Number(value=2.0, label="口型和音频同步的权重"),
         gr.Number(value=1.0, label="情感等级，越大越夸张，建议小于15"),
-        gr.Checkbox(label="跳过裁剪(no_crop)")
+        gr.Checkbox(label="跳过裁剪(no_crop)"),
+        gr.Textbox(label="文本输入",value="大叫好，我是蔡徐坤")
     ],
     outputs=gr.Video(label="生成的视频"),
     title="Float数字人口型生成 by Noah Dong",
