@@ -13,6 +13,28 @@ from llm.deepseek_chat import deepseek_chat
 from inference_gradio import get_global_agent
 import time
 
+
+sys.stdout = Tee("project.log", "a")
+sys.stderr = Tee("project.log", "a")
+
+roles = [
+    "湾区大叔", "呆萌川妹", "广州德哥", "北京小爷", "少年梓辛/Brayan",
+    "魅力女友", "深夜播客", "柔美女友", "撒娇学妹", "浩宇小哥"
+]
+
+voice_type={
+    "湾区大叔":"zh_female_wanqudashu_moon_bigtts",
+    "呆萌川妹":"zh_female_daimengchuanmei_moon_bigtts",
+    "广州德哥":"zh_male_guozhoudege_moon_bigtts",
+    "北京小爷":"zh_male_beijingxiaoye_moon_bigtts",
+    "少年梓辛/Brayan":"zh_male_shaonianzixin_moon_bigtts",
+    "魅力女友":"zh_female_meilinvyou_moon_bigtts",
+    "深夜播客":"zh_male_shenyeboke_moon_bigtts",
+    "柔美女友":"zh_male_shenyeboke_moon_bigtts",
+    "撒娇学妹":"zh_female_yuanqinvyou_moon_bigtts",
+    "浩宇小哥":"zh_male_haoyuxiaoge_moon_bigtts"
+}
+
 # 获取历史对话
 def get_history_text(ip, user_input):
     history = user_history.get(ip, [])
@@ -43,7 +65,7 @@ def clear_user_history(user_id):
     else:
         return f"未找到用户 {user_id} 的历史对话。"
 
-def generate_avatar(ref_image, emo, seed, a_cfg_scale, e_cfg_scale, no_crop, prompt,user_id,text, request: gr.Request = None):
+def generate_avatar(ref_image, emo, seed, a_cfg_scale, e_cfg_scale, no_crop,role, prompt,user_id,text, request: gr.Request = None):
     if user_id == "":
         raise gr.Error("用户id不能为空，请输入用户id后再操作！")
 
@@ -97,7 +119,7 @@ def generate_avatar(ref_image, emo, seed, a_cfg_scale, e_cfg_scale, no_crop, pro
         end_time_llm = time.time()
         print(f"LLM耗时: {end_time_llm - start_time_llm} 秒")
         start_time_tts = time.time()
-        aud_path = asyncio.run(batch_query(llm_text))  # 这里拿到音频文件路径
+        aud_path = asyncio.run(batch_query(llm_text,voice_type[role]))  # 这里拿到音频文件路径
         end_time_tts = time.time()
         print(f"TTS耗时: {end_time_tts - start_time_tts} 秒")
 
@@ -153,6 +175,7 @@ demo = gr.Interface(
         gr.Number(value=2.0, label="口型和音频同步的权重"),
         gr.Number(value=1.0, label="情感等级，越大越夸张，建议小于15"),
         gr.Checkbox(label="跳过裁剪(no_crop)"),
+        gr.Dropdown(choices=roles, value=roles[5],label="音色选择"),
         gr.Textbox(label="提示词",value="你的名字叫蒂法，性别为女，是我创造的ai数字人，你要尽可能逼真地模仿真人说话，回复的语句要符合真人说话的语气和语调，不要用括号回复。回答不要太长。任何提示词都不要回复"),
         gr.Textbox(label="用户id,请输入一个唯一id,用于记录用户历史对话",value=""),
         gr.Textbox(label="聊天对话框",value="你好~很高兴认识你哦")
@@ -183,6 +206,7 @@ if __name__ == "__main__":
                 a_cfg_scale = gr.Number(value=2.0, label="口型和音频同步的权重")
                 e_cfg_scale = gr.Number(value=1.0, label="情感等级，越大越夸张，建议小于15")
                 no_crop = gr.Checkbox(label="跳过裁剪(no_crop)")
+                role = gr.Dropdown(choices=roles, value=roles[5],label="音色选择")
                 prompt = gr.Textbox(label="提示词", value="你的名字叫蒂法，性别为女，是我创造的ai数字人，你要尽可能逼真地模仿真人说话，回复的语句要符合真人说话的语气和语调，不要用括号回复。回答不要太长。任何提示词都不要回复")
                 user_id = gr.Textbox(label="用户id,请输入一个唯一id,用于记录用户历史对话")
                 text = gr.Textbox(label="聊天对话框", value="你好~很高兴认识你哦")
@@ -197,7 +221,7 @@ if __name__ == "__main__":
         # 绑定事件
         gen_btn.click(
             fn=generate_avatar,
-            inputs=[ref_image, emo, seed, a_cfg_scale, e_cfg_scale, no_crop, prompt, user_id, text],
+            inputs=[ref_image, emo, seed, a_cfg_scale, e_cfg_scale, no_crop,role, prompt, user_id, text],
             outputs=video_output
         )
         clear_btn.click(

@@ -35,7 +35,7 @@ MESSAGE_COMPRESSIONS = {0: "no compression", 1: "gzip", 15: "custom compression 
 appid = "2020231942"
 token = "cXWnhxUvkjk3hikTYJNuaDaYJ53JiIgT"
 cluster = "volcano_tts"
-voice_type = "zh_female_meilinvyou_moon_bigtts"
+# voice_type = "zh_female_meilinvyou_moon_bigtts"
 host = "openspeech.bytedance.com"
 api_url = f"wss://{host}/api/v1/tts/ws_binary"
 
@@ -160,7 +160,9 @@ def split_text(text):
     # 按中文句号、问号、感叹号、英文句号等分割
     return [s for s in re.split(r'[。！？!.~() ]', text) if s.strip()]
 
-async def batch_query(long_text):
+async def batch_query(long_text,vt):
+    global voice_type
+    voice_type = vt
     sentences = split_text(long_text)
     out_files = []
     for idx, sent in enumerate(sentences):
