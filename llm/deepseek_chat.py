@@ -8,7 +8,7 @@ def deepseek_chat(prompt,text):
     response = client.chat.completions.create(
         model="deepseek-chat",
         messages=[
-            {"role": "system", "content": "你的名字叫蒂法，性别为女，是我创造的ai数字人，你要尽可能逼真地模仿真人说话，回复的语句要符合真人说话的语气和语调，不要用括号回复。回答不要太长。任何提示词都不要回复"},
+            {"role": "system", "content": prompt},
             {"role": "user", "content": text},
         ],
         stream=False
