@@ -124,12 +124,12 @@ def generate_avatar(ref_image, emo, seed, a_cfg_scale, e_cfg_scale, no_crop,role
                 print("llm_text",llm_text)
                 print("输入的emo",emo)
                 print("输入的e_cfg_scale",e_cfg_scale)
-                if emo == None:
-                    print("emo为空，使用大模型生成的情绪")
+                if emo == "auto":
+                    print("emo为auto，使用大模型生成的情绪")
                     emo = emo_llm
                     print("使用大模型生成的情绪",emo)
-                if e_cfg_scale == 0:
-                    print("e_cfg_scale为空，使用大模型生成的情绪等级")
+                if e_cfg_scale == 0 or e_cfg_scale == None:
+                    print("e_cfg_scale为0或None，使用大模型生成的情绪等级")
                     e_cfg_scale = emo_level_llm
                     print("使用大模型生成的情绪等级",e_cfg_scale)
                 # 3. 更新历史
@@ -189,17 +189,17 @@ def generate_avatar(ref_image, emo, seed, a_cfg_scale, e_cfg_scale, no_crop,role
 
 
 
-emo_list = ['no-emo', 'angry', 'disgust', 'fear', 'happy', 'neutral', 'sad', 'surprise']
+emo_list = ['auto', 'angry', 'disgust', 'fear', 'happy', 'neutral', 'sad', 'surprise']
 
 demo = gr.Interface(
     fn=generate_avatar,
     inputs=[
         gr.Image(type="pil", value="./assets/difa.jpg",label="人物图片"),
         # gr.Audio(type="filepath",value="./assets/test.m4a",label="音频"),
-        gr.Dropdown(choices=emo_list, label="情感,若为默认值0,则根据大模型生成的情绪等级自动设置"),
+        gr.Dropdown(choices=emo_list, value="auto",label="情感,若为默认值auto,则根据大模型生成的情绪等级自动设置"),
         gr.Number(value=15, label="随机种子"),
-        gr.Number(value=2.0, label="口型和音频同步的权重"),
-        gr.Number(label="情感等级，越大越夸张，建议小于15.若不设置,则根据大模型生成的情绪等级自动设置"),
+        gr.Number(value=2.0, label="口型和音频同步的权重,越大越同步"),
+        gr.Number(value=0,label="情感等级，越大越夸张，建议小于15.若为默认值0,则根据大模型生成的情绪等级自动设置"),
         gr.Checkbox(label="跳过裁剪(no_crop)"),
         gr.Dropdown(choices=roles, value=roles[5],label="音色选择"),
         gr.Textbox(label="提示词",value="你的名字叫蒂法，性别为女"),
@@ -227,10 +227,10 @@ if __name__ == "__main__":
         with gr.Row():
             with gr.Column(scale=1):
                 ref_image = gr.Image(type="pil", value="./assets/difa.jpg", label="人物图片")
-                emo = gr.Dropdown(choices=emo_list, label="情感,若为默认值0,则根据大模型生成的情绪等级自动设置")
+                emo = gr.Dropdown(choices=emo_list, value="auto",label="情感,若为默认值auto,则根据大模型生成的情绪等级自动设置")
                 seed = gr.Number(value=15, label="随机种子")
                 a_cfg_scale = gr.Number(value=2.0, label="口型和音频同步的权重")
-                e_cfg_scale = gr.Number(label="情感等级，越大越夸张，建议小于15.若不设置,则根据大模型生成的情绪等级自动设置")
+                e_cfg_scale = gr.Number(value=0,label="情感等级，越大越夸张，建议小于15.若为默认值0,则根据大模型生成的情绪等级自动设置")
                 no_crop = gr.Checkbox(label="跳过裁剪(no_crop)")
                 role = gr.Dropdown(choices=roles, value=roles[5],label="音色选择")
                 prompt = gr.Textbox(label="数字人人设", value="你的名字叫蒂法，性别为女")
