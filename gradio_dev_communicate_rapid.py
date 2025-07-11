@@ -43,7 +43,6 @@ def get_history_text(ip, user_input):
     #     full_prompt += f"用户：{turn['user']}\nAI：{turn['ai']}\n"
     # full_prompt += f"用户：{user_input}\nAI："
     return history
-
 # 更新历史对话
 def update_history(ip, user_input, ai_output):
     if ip not in user_history:
@@ -52,6 +51,15 @@ def update_history(ip, user_input, ai_output):
     user_history[ip].append({"role": "assistant", "content": ai_output})
     # if len(user_history[ip]) > 100:
     #     user_history[ip] = user_history[ip][-100:]
+
+# 保存历史对话
+def save_user_history():
+    with open(memory_path, "w", encoding="utf-8") as f:
+        # print("保存user_history",user_history)
+        json.dump(user_history, f, ensure_ascii=False, indent=2)
+    # print("user_history 已保存到 user_history_memory.json")
+
+
 
 # 新增：清空用户历史对话
 
@@ -65,13 +73,14 @@ def clear_user_history(user_id):
     else:
         return f"未找到用户 {user_id} 的历史对话。"
 
-def generate_avatar(ref_image, emo, seed, a_cfg_scale, e_cfg_scale, no_crop,role, prompt,user_id,text, request: gr.Request = None):
+def generate_avatar(ref_image, emo, seed, a_cfg_scale, e_cfg_scale, max_emotion_level, no_crop,role, prompt,user_id,text, request: gr.Request = None):
     if user_id == "":
         raise gr.Error("用户id不能为空，请输入用户id后再操作！")
 
     start_time = time.time()
     # 创建临时目录
-    tmp_dir = f"./results/tmp_{uuid.uuid4().hex}"
+    time_str = time.strftime('%Y%m%d_%H%M%S')
+    tmp_dir = f"./results/time_{time_str}_{uuid.uuid4().hex}"
     os.makedirs(tmp_dir, exist_ok=True)
     ref_path = os.path.join(tmp_dir, "ref.png")
     aud_path = os.path.join(tmp_dir, "audio.wav")
@@ -108,17 +117,17 @@ def generate_avatar(ref_image, emo, seed, a_cfg_scale, e_cfg_scale, no_crop,role
             text_with_history = [{"role": "user", "content": text}]
         else:
             text_with_history = history_text+[{"role": "user", "content": text}]
-        print("text_with_history",text_with_history)
+        # print("text_with_history",text_with_history)
 
         max_retry = 3
         retry_count = 0
         while retry_count < max_retry:
             try:
                 # 2. deepseek 生成
-                ai_output = deepseek_chat(prompt, text_with_history)
+                ai_output = deepseek_chat(prompt, text_with_history,max_emotion_level)
                 print("ai_output",ai_output)
                 emo_llm = ai_output.split(";")[0]
-                emo_level_llm = int(ai_output.split(";")[1])
+                emo_level_llm = float(ai_output.split(";")[1])
                 llm_text = ai_output.split(";")[2:]
                 llm_text = ";".join(llm_text)
                 print("emo_llm",emo_llm )
@@ -126,6 +135,10 @@ def generate_avatar(ref_image, emo, seed, a_cfg_scale, e_cfg_scale, no_crop,role
                 print("llm_text",llm_text)
                 print("输入的emo",emo)
                 print("输入的e_cfg_scale",e_cfg_scale)
+                print("输入的max_emotion_level",max_emotion_level)
+                if(max_emotion_level == 0 or max_emotion_level == None):
+                    max_emotion_level = 5
+                    print("输入的max_emotion_level",max_emotion_level)
                 if emo == "auto":
                     print("emo为auto，使用大模型生成的情绪")
                     emo = emo_llm
@@ -136,7 +149,8 @@ def generate_avatar(ref_image, emo, seed, a_cfg_scale, e_cfg_scale, no_crop,role
                     print("使用大模型生成的情绪等级",e_cfg_scale)
                 # 3. 更新历史
                 update_history(user_id, text, ai_output)
-                print("更新历史对话:",user_history)
+                save_user_history()
+                # print("更新历史对话:",user_history)
                 end_time_llm = time.time()
                 print(f"LLM耗时: {end_time_llm - start_time_llm} 秒")
                 start_time_tts = time.time()
@@ -202,6 +216,7 @@ demo = gr.Interface(
         gr.Number(value=15, label="随机种子"),
         gr.Number(value=2.0, label="口型和音频同步的权重,越大越同步"),
         gr.Number(value=0,label="情感等级，越大越夸张，建议小于15.若为默认值0,则根据大模型生成的情绪等级自动设置"),
+        gr.Number(value=5,label="大模型情感等级最大值"),
         gr.Checkbox(label="跳过裁剪(no_crop)"),
         gr.Dropdown(choices=roles, value=roles[5],label="音色选择"),
         gr.Textbox(label="提示词",value="你的名字叫蒂法，性别为女"),
@@ -220,6 +235,7 @@ def get_latest_video(results_dir="./results"):
     latest_video = max(video_files, key=os.path.getctime)
     return latest_video
 
+
 if __name__ == "__main__":
     memory_path = "./memory/user_history_memory.json"
     user_history = {}
@@ -232,13 +248,9 @@ if __name__ == "__main__":
     else:
         with open(memory_path, "w", encoding="utf-8") as f:
             json.dump(user_history, f, ensure_ascii=False, indent=2)
-    print("user_history", user_history)
+    # print("user_history", user_history)
 
-    def save_user_history():
-        with open(memory_path, "w", encoding="utf-8") as f:
-            print("关闭程序时，保存user_history",user_history)
-            json.dump(user_history, f, ensure_ascii=False, indent=2)
-        print("user_history 已保存到 user_history_memory.json")
+
 
     atexit.register(save_user_history)  
 
@@ -254,6 +266,7 @@ if __name__ == "__main__":
                 seed = gr.Number(value=15, label="随机种子")
                 a_cfg_scale = gr.Number(value=2.0, label="口型和音频同步的权重")
                 e_cfg_scale = gr.Number(value=0,label="情感等级，越大越夸张，建议小于15.若为默认值0,则根据大模型生成的情绪等级自动设置")
+                max_emotion_level = gr.Number(value=5,label="大模型情感等级最大值")
                 no_crop = gr.Checkbox(label="跳过裁剪(no_crop)")
                 role = gr.Dropdown(choices=roles, value=roles[5],label="音色选择")
                 prompt = gr.Textbox(label="数字人人设", value="你的名字叫蒂法，性别为女")
@@ -270,7 +283,7 @@ if __name__ == "__main__":
         # 绑定事件
         gen_btn.click(
             fn=generate_avatar,
-            inputs=[ref_image, emo, seed, a_cfg_scale, e_cfg_scale, no_crop,role, prompt, user_id, text],
+            inputs=[ref_image, emo, seed, a_cfg_scale, e_cfg_scale, max_emotion_level, no_crop,role, prompt, user_id, text],
             outputs=video_output
         )
         clear_btn.click(
