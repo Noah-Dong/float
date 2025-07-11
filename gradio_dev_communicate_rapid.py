@@ -14,8 +14,6 @@ from inference_gradio import get_global_agent
 import time
 
 
-sys.stdout = Tee("project.log", "a")
-sys.stderr = Tee("project.log", "a")
 
 roles = [
     "湾区大叔", "呆萌川妹", "广州德哥", "北京小爷", "少年梓辛/Brayan",
@@ -30,7 +28,7 @@ voice_type={
     "少年梓辛/Brayan":"zh_male_shaonianzixin_moon_bigtts",
     "魅力女友":"zh_female_meilinvyou_moon_bigtts",
     "深夜播客":"zh_male_shenyeboke_moon_bigtts",
-    "柔美女友":"zh_male_shenyeboke_moon_bigtts",
+    "柔美女友":"zh_female_sajiaonvyou_moon_bigtts",
     "撒娇学妹":"zh_female_yuanqinvyou_moon_bigtts",
     "浩宇小哥":"zh_male_haoyuxiaoge_moon_bigtts"
 }
