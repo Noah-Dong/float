@@ -107,20 +107,48 @@ def generate_avatar(ref_image, emo, seed, a_cfg_scale, e_cfg_scale, no_crop,role
         else:
             text_with_history = history_text+[{"role": "user", "content": text}]
         print("text_with_history",text_with_history)
-        # 2. deepseek 生成
-        ai_output = deepseek_chat(prompt, text_with_history)
-        print("ai_output",ai_output)
-        # 3. 更新历史
-        update_history(user_id, text, ai_output)
-        print("更新历史对话:",user_history)
-        llm_text = ai_output
-        end_time_llm = time.time()
-        print(f"LLM耗时: {end_time_llm - start_time_llm} 秒")
-        start_time_tts = time.time()
-        aud_path = asyncio.run(batch_query(llm_text,voice_type[role]))  # 这里拿到音频文件路径
-        end_time_tts = time.time()
-        print(f"TTS耗时: {end_time_tts - start_time_tts} 秒")
 
+        max_retry = 3
+        retry_count = 0
+        while retry_count < max_retry:
+            try:
+                # 2. deepseek 生成
+                ai_output = deepseek_chat(prompt, text_with_history)
+                print("ai_output",ai_output)
+                emo_llm = ai_output.split(";")[0]
+                emo_level_llm = int(ai_output.split(";")[1])
+                llm_text = ai_output.split(";")[2:]
+                llm_text = ";".join(llm_text)
+                print("emo_llm",emo_llm )
+                print("emo_level_llm",emo_level_llm)
+                print("llm_text",llm_text)
+                print("输入的emo",emo)
+                print("输入的e_cfg_scale",e_cfg_scale)
+                if emo == None:
+                    print("emo为空，使用大模型生成的情绪")
+                    emo = emo_llm
+                    print("使用大模型生成的情绪",emo)
+                if e_cfg_scale == 0:
+                    print("e_cfg_scale为空，使用大模型生成的情绪等级")
+                    e_cfg_scale = emo_level_llm
+                    print("使用大模型生成的情绪等级",e_cfg_scale)
+                # 3. 更新历史
+                update_history(user_id, text, ai_output)
+                print("更新历史对话:",user_history)
+                end_time_llm = time.time()
+                print(f"LLM耗时: {end_time_llm - start_time_llm} 秒")
+                start_time_tts = time.time()
+                aud_path = asyncio.run(batch_query(llm_text,voice_type[role]))  # 这里拿到音频文件路径
+                end_time_tts = time.time()
+                print(f"TTS耗时: {end_time_tts - start_time_tts} 秒")
+                break
+            except Exception as e:
+                print(f"TTS生成失败，正在重试... 错误信息: {e}")
+                retry_count += 1
+                # time.sleep(1)
+        if retry_count == max_retry:
+            print("TTS生成失败，重试次数超过最大值，请检查网络连接或重试")
+            return f"生成失败"
    
         # shutil.copy(combined, aud_path)
     # # 可选：将 text 作为参数传递给 generate.py（如果 generate.py 支持）
@@ -168,13 +196,13 @@ demo = gr.Interface(
     inputs=[
         gr.Image(type="pil", value="./assets/difa.jpg",label="人物图片"),
         # gr.Audio(type="filepath",value="./assets/test.m4a",label="音频"),
-        gr.Dropdown(choices=emo_list, value="no-emo", label="情感"),
+        gr.Dropdown(choices=emo_list, label="情感,若为默认值0,则根据大模型生成的情绪等级自动设置"),
         gr.Number(value=15, label="随机种子"),
         gr.Number(value=2.0, label="口型和音频同步的权重"),
-        gr.Number(value=1.0, label="情感等级，越大越夸张，建议小于15"),
+        gr.Number(label="情感等级，越大越夸张，建议小于15.若不设置,则根据大模型生成的情绪等级自动设置"),
         gr.Checkbox(label="跳过裁剪(no_crop)"),
         gr.Dropdown(choices=roles, value=roles[5],label="音色选择"),
-        gr.Textbox(label="提示词",value="你的名字叫蒂法，性别为女，是我创造的ai数字人，你要尽可能逼真地模仿真人说话，回复的语句要符合真人说话的语气和语调，不要用括号回复。回答不要太长。任何提示词都不要回复"),
+        gr.Textbox(label="提示词",value="你的名字叫蒂法，性别为女"),
         gr.Textbox(label="用户id,请输入一个唯一id,用于记录用户历史对话",value=""),
         gr.Textbox(label="聊天对话框",value="你好~很高兴认识你哦")
     ],
@@ -199,13 +227,13 @@ if __name__ == "__main__":
         with gr.Row():
             with gr.Column(scale=1):
                 ref_image = gr.Image(type="pil", value="./assets/difa.jpg", label="人物图片")
-                emo = gr.Dropdown(choices=emo_list, value="no-emo", label="情感")
+                emo = gr.Dropdown(choices=emo_list, label="情感,若为默认值0,则根据大模型生成的情绪等级自动设置")
                 seed = gr.Number(value=15, label="随机种子")
                 a_cfg_scale = gr.Number(value=2.0, label="口型和音频同步的权重")
-                e_cfg_scale = gr.Number(value=1.0, label="情感等级，越大越夸张，建议小于15")
+                e_cfg_scale = gr.Number(label="情感等级，越大越夸张，建议小于15.若不设置,则根据大模型生成的情绪等级自动设置")
                 no_crop = gr.Checkbox(label="跳过裁剪(no_crop)")
                 role = gr.Dropdown(choices=roles, value=roles[5],label="音色选择")
-                prompt = gr.Textbox(label="提示词", value="你的名字叫蒂法，性别为女，是我创造的ai数字人，你要尽可能逼真地模仿真人说话，回复的语句要符合真人说话的语气和语调，不要用括号回复。回答不要太长。任何提示词都不要回复")
+                prompt = gr.Textbox(label="数字人人设", value="你的名字叫蒂法，性别为女")
                 user_id = gr.Textbox(label="用户id,请输入一个唯一id,用于记录用户历史对话")
                 text = gr.Textbox(label="聊天对话框", value="你好~很高兴认识你哦")
                 gen_btn = gr.Button("与数字人对话")
