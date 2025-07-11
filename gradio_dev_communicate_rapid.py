@@ -12,6 +12,8 @@ import asyncio
 from llm.deepseek_chat import deepseek_chat
 from inference_gradio import get_global_agent
 import time
+import atexit
+import json
 
 
 
@@ -48,8 +50,8 @@ def update_history(ip, user_input, ai_output):
         user_history[ip] = []
     user_history[ip].append({"role": "user", "content": user_input})
     user_history[ip].append({"role": "assistant", "content": ai_output})
-    if len(user_history[ip]) > 100:
-        user_history[ip] = user_history[ip][-100:]
+    # if len(user_history[ip]) > 100:
+    #     user_history[ip] = user_history[ip][-100:]
 
 # 新增：清空用户历史对话
 
@@ -219,7 +221,28 @@ def get_latest_video(results_dir="./results"):
     return latest_video
 
 if __name__ == "__main__":
+    memory_path = "./memory/user_history_memory.json"
     user_history = {}
+
+    os.makedirs("./memory", exist_ok=True)
+
+    if os.path.exists(memory_path):
+        with open(memory_path, "r", encoding="utf-8") as f:
+            user_history = json.load(f)
+    else:
+        with open(memory_path, "w", encoding="utf-8") as f:
+            json.dump(user_history, f, ensure_ascii=False, indent=2)
+    print("user_history", user_history)
+
+    def save_user_history():
+        with open(memory_path, "w", encoding="utf-8") as f:
+            print("关闭程序时，保存user_history",user_history)
+            json.dump(user_history, f, ensure_ascii=False, indent=2)
+        print("user_history 已保存到 user_history_memory.json")
+
+    atexit.register(save_user_history)  
+
+
     agent = get_global_agent()
 
     with gr.Blocks() as demo:
