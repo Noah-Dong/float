@@ -1,173 +1,348 @@
-# FLOAT: Generative Motion Latent Flow Matching for Audio-driven Talking Portrait
-Official Pytorch Implementation of FLOAT; Flow Matching for Audio-driven Talking Portrait Video Generation
+# FLOAT - 数字人视频生成系统
 
-![preview](./assets/float-abstract.png)
-
-**FLOAT: Generative Motion Latent Flow Matching for Audio-driven Talking Portrait**<br>
-[Taekyung Ki](https://taekyungki.github.io), [Dongchan Min](https://kevinmin95.github.io), [Gyeongsu Chae](https://www.aistudios.com/ko)
-
-Project Page: https://deepbrainai-research.github.io/float/
-
-**Abstract**: *With the rapid advancement of diffusion-based generative models, portrait image animation has achieved remarkable results. However, it still faces challenges in temporally consistent video generation and fast sampling due to its iterative sampling nature. This paper presents FLOAT, an audio-driven talking portrait video generation method based on flow matching generative model. We shift the generative modeling from the pixel-based latent space to a learned motion latent space, enabling efficient design of temporally consistent motion. To achieve this, we introduce a transformer-based vector field predictor with a simple yet effective frame-wise conditioning mechanism. Additionally, our method supports speech-driven emotion enhancement, enabling a natural incorporation of expressive motions. Extensive experiments demonstrate that our method outperforms state-of-the-art audio-driven talking portrait methods in terms of visual quality, motion fidelity, and efficiency.*
-
-**TL:DR: FLOAT is a flow matching based audio-driven talking portrait video generation method, which can enhance the speech-driven emotional motion.**
-
-## Generation Results
-
-| Result 1 | Result 2 |
-|---------------|---------|
-| <video src="https://github.com/user-attachments/assets/8c00274d-795d-4ee9-870f-84a859f3e23f"> </video> | <video src="https://github.com/user-attachments/assets/c6e142b3-519b-4cda-b26d-e088414b478d"> </video> |
-
-| Result 3 | Result 4 |
-|--------|-----------|
-| <video src="https://github.com/user-attachments/assets/7b201a5f-a293-46cd-974f-0612062d8d94"> </video> |  <video src="https://github.com/user-attachments/assets/dd4b74dd-40b4-4864-b87d-7cbf4f0d66da"> </video> |
-
-<br>
-Our method runs faster than current diffusion-based methods with fewer sampling steps and lower memory cost. For more details, please refer to the paper.
-<div align='center'>
-    <image width= 80% src="./assets/fps.png"> </image>
+<div align="center">
+  <img src="assets/float-abstract.png" alt="FLOAT Logo" width="400"/>
 </div>
 
+## 📖 项目简介
 
+FLOAT 是一个基于深度学习的数字人视频生成系统，能够根据参考图像和音频输入，生成逼真的说话人视频。该系统支持多种情感表达，提供多种部署方式，适用于数字人直播、虚拟主播、AI助手等场景。
 
-## Updates
-- [2025.02.17] The inference code and checkpoints are released under a **[Non-commercial License](https://creativecommons.org/licenses/by-nc-nd/4.0/)**.
-- [2024.12.03] Selected as a [HuggingFace Daily Papers](https://huggingface.co/papers?date=2024-12-03) on December 3, 2024. 
-- [2024.12.02] The paper is publicly available on [ArXiv](https://arxiv.org/abs/2412.01064).
+### ✨ 主要特性
 
+- 🎭 **多模态生成**: 支持图像+音频的端到端视频生成
+- 🎨 **情感控制**: 支持7种情感类型（愤怒、厌恶、恐惧、快乐、中性、悲伤、惊讶）
+- 🔧 **灵活部署**: 提供Web界面、API接口、Gradio演示等多种使用方式
+- 🎯 **高质量输出**: 基于Flow Matching Transformer的高质量视频生成
+- 🚀 **实时推理**: 优化的推理流程，支持快速生成
+- 🎤 **TTS集成**: 内置文本转语音功能，支持多种音色
 
-## Getting Started
-### Requirements
-```.bash
-# 1. Create Conda Environment
-conda create -n FLOAT python=3.8.5
-conda activate FLOAT
+## 🏗️ 系统架构
 
-# 2. Install torch and requirements
-sh environments.sh
-
-# or manual installation
-pip install torch==2.0.1 torchvision==0.15.2 torchaudio==2.0.2 --index-url https://download.pytorch.org/whl/cu118
-pip install -r requirements.txt
 ```
-- Test on Linux, A100 GPU, and V100 GPU.
+输入: 参考图像 + 音频/文本
+    ↓
+预处理: 人脸检测 + 音频特征提取
+    ↓
+FLOAT模型: 运动潜在自编码器 + 条件编码器 + 流匹配变换器
+    ↓
+输出: 说话人视频
+```
 
-### Preparing checkpoints
+### 核心组件
 
-1. Download checkpints automatically
+- **运动潜在自编码器**: 编码/解码图像，控制面部运动
+- **音频编码器**: 基于Wav2Vec2的音频特征提取
+- **情感编码器**: 语音情感识别和分类
+- **流匹配变换器**: 核心生成模块，基于ODE求解器
 
-    ```.bash
-    sh download_checkpoints.sh
-    ```
+## 🛠️ 环境要求
 
-    or download checkpoints manually from this [google-drive](https://drive.google.com/file/d/1rvWuM12cyvNvBQNCLmG4Fr2L1rpjQBF0/view?usp=sharing).
+- **Python**: 3.8+
+- **CUDA**: 11.8+ (推荐)
+- **GPU**: 8GB+ VRAM (推荐)
+- **内存**: 16GB+ RAM
 
-2. The checkpoints should be organized as follows:
-    ```.bash
-    ./checkpints
-    |-- checkpoints_here
-    |-- float.pth                                       # main model
-    |-- wav2vec2-base-960h/                             # audio encoder
-    |   |-- .gitattributes
-    |   |-- config.json
-    |   |-- feature_extractor_config.json
-    |   |-- model.safetensors
-    |   |-- preprocessor_config.json
-    |   |-- pytorch_model.bin
-    |   |-- README.md
-    |   |-- special_tokens_map.json
-    |   |-- tf_model.h5
-    |   |-- tokenizer_config.json
-    |   '-- vocab.json
-    '-- wav2vec-english-speech-emotion-recognition/     # emotion encoder
-        |-- .gitattributes
-        |-- config.json
-        |-- preprocessor_config.json
-        |-- pytorch_model.bin
-        |-- README.md
-        '-- training_args.bin
-    ```
-   - W2V based models could be found in the links: [wav2vec2-base-960h](https://huggingface.co/facebook/wav2vec2-base-960h) and [wav2vec-english-speech-emotion-recognition](https://huggingface.co/r-f/wav2vec-english-speech-emotion-recognition).
+## 📦 安装指南
 
+### 1. 克隆项目
 
-### Generating Talking Portait Video from Single Image and Audio
-1. Pre-process;❗ **Important** ❗ for better quality. Please read this.
-- FLOAT is trained on the frontal head pose distributions. Non-frontal image may lead to suboptimal results.
-- The performance of taking portrait methods often depends on their training preprocess strategies, e.g., the field-of-view. The inference code includes an automatic face-cropping function, which may involve black **padding** regions. You can manually disable the cropping process in `generate.py`, however it may lead to suboptimal performance.
-- If your audio contains heavy background music, please use [ClearVoice](https://github.com/modelscope/ClearerVoice-Studio) to extract the vocals for better performance.
+```bash
+git clone <repository-url>
+cd float
+```
 
+### 2. 安装依赖
 
-1. Generating video 1 (Emotion from Audio)
-   
-    You can generate a video with an emotion from audio without specifying `--emo`. You can adjust the intensity of the emotion using `--e_cfg_scale` (default 1). For more emotion intensive video, try large value from 5 to 10 for `--e_cfg_scale`. 
-    ```.bash
-    CUDA_VISIBLE_DEVICES=0 python generate.py
-        --ref_path path/to/reference/image \
-        --aud_path path/to/audio \
-        --seed 15 \
-        --a_cfg_scale 2 \
-        --e_cfg_scale 1 \
-        --ckpt_path ./checkpoints/float.pth
-        --no_crop                    # [optional] skip cropping
-    ```
+#### 方法一：使用安装脚本（推荐）
 
-2. Generate video 2 (Redirecting Emotion)
-    You can generate a video of other emotion by specifying `--emo`. It supports seven basic emotions: ['angry', 'disgust', 'fear', 'happy', 'neutral', 'sad', 'surprise']. You can adjust the intensity of the emotion using `--e_cfg_scale` (default 1). For more emotion intensive video, try large value from 5 to 10 for `--e_cfg_scale`.
-    ```.bash
-    CUDA_VISIBLE_DEVICES=0 python generate.py\
-        --ref_path path/to/reference/image \ 
-        --aud_path path/to/audio \
-        --emo 'happy' \             # Seven emotions ['angry', 'disgust', 'fear', 'happy', 'neutral', 'sad', 'surprise'] 
-        --seed  15 \ 
-        --a_cfg_scale 2 \
-        --e_cfg_scale 1 \
-        --ckpt_path ./checkpoints/float.pth \
-        --no_crop                   # [optional] skip cropping
-    ```
+```bash
+chmod +x start.sh
+./start.sh
+```
 
-    <video src="https://github.com/user-attachments/assets/fb3826cd-231b-46f2-809b-11adebe9a1cf"> </video> 
+#### 方法二：手动安装
 
+```bash
+# 安装PyTorch
+pip install torch==2.0.1 torchvision==0.15.2 torchaudio==2.0.2 --index-url https://download.pytorch.org/whl/cu118
 
-3. Running example and results
-    ```.bash
-    CUDA_VISIBLE_DEVICES=0 python generate.py \
-        --ref_path assets/sam_altman.webp \ 
-        --aud_path assets/aud-sample-vs-1.wav \
-        --seed  15 \ 
-        --a_cfg_scale 2 \
-        --e_cfg_scale 1 \
-        --ckpt_path ./checkpoints/float.pth
-    ```
-    
+# 安装项目依赖
+pip install -r requirements.txt
 
-    | Before Crop | After Crop | Result |
-    |---------------|---------|--------|
-    | ![](assets/sam_altman.webp) | ![](assets/sam_altman_512x512.jpg) | <video src='https://github.com/user-attachments/assets/3353e4e0-00f5-429b-bc66-5db9a72186b8'> </video> |
+# 安装额外依赖
+pip install fastapi uvicorn gradio opencv-python numpy
+```
 
-<br>
+### 3. 下载模型权重
 
-## ❗License❗
-This work is licensed under a [Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International License](https://creativecommons.org/licenses/by-nc-nd/4.0/). You may not use this work for commercial purposes and may use it only for research purposes. **For any commercial inquiries or collaboration opportunities**, please contact daniel@deepbrain.io.
+```bash
+chmod +x download_checkpoints.sh
+./download_checkpoints.sh
+```
 
+或者手动下载模型权重文件到 `checkpoints/` 目录。
 
-## Development
-This repository is a research demonstration implementation and is provided as a one-time code drop. For any research-related inquiries, please contact the first author [Taekyung Ki](https://github.com/TaekyungKi). This work was done during the first author's South Korean Alternative Military Service at DeepBrain AI. This repository includes only the inference code; the training code will not be released. 
+## 🚀 快速开始
 
-## Citation
-```bibtex
-@article{ki2024float,
-  title={FLOAT: Generative Motion Latent Flow Matching for Audio-driven Talking Portrait},
-  author={Ki, Taekyung and Min, Dongchan and Chae, Gyeongsu},
-  journal={arXiv preprint arXiv:2412.01064},
-  year={2024}
+### 命令行使用
+
+```bash
+python generate.py \
+    --ref_path assets/difa.jpg \
+    --aud_path assets/test.m4a \
+    --emo happy \
+    --res_dir ./results \
+    --ckpt_path ./checkpoints/float.pth
+```
+
+### Web界面
+
+```bash
+python web_server.py
+```
+
+访问 `http://localhost:8080` 使用Web界面。
+
+### Gradio演示
+
+```bash
+python gradio_dev_communicate_rapid.py
+```
+
+访问 `http://localhost:7860` 使用Gradio界面。
+
+### API服务
+
+```bash
+python api_server.py
+```
+
+API服务运行在 `http://localhost:8000`。
+
+## 📚 使用指南
+
+### 参数说明
+
+| 参数 | 类型 | 默认值 | 说明 |
+|------|------|--------|------|
+| `--ref_path` | str | - | 参考图像路径 |
+| `--aud_path` | str | - | 音频文件路径 |
+| `--emo` | str | 'auto' | 情感类型 |
+| `--a_cfg_scale` | float | 2.0 | 音频同步权重 |
+| `--e_cfg_scale` | float | 0 | 情感强度 |
+| `--nfe` | int | 10 | 推理步数 |
+| `--seed` | int | 25 | 随机种子 |
+| `--no_crop` | bool | False | 是否跳过人脸裁剪 |
+
+### 情感类型
+
+- `auto`: 自动检测情感
+- `angry`: 愤怒
+- `disgust`: 厌恶
+- `fear`: 恐惧
+- `happy`: 快乐
+- `neutral`: 中性
+- `sad`: 悲伤
+- `surprise`: 惊讶
+
+### 音色选择
+
+- 湾区大叔
+- 呆萌川妹
+- 广州德哥
+- 北京小爷
+- 少年梓辛/Brayan
+- 魅力女友
+- 深夜播客
+- 柔美女友
+- 撒娇学妹
+- 浩宇小哥
+
+## 🔌 API文档
+
+### 生成视频接口
+
+**POST** `/generate-avatar/`
+
+**请求参数:**
+- `ref_image`: 参考图像文件
+- `text`: 要说的文本
+- `role`: 音色选择
+- `emo`: 情感类型 (可选)
+- `seed`: 随机种子 (可选)
+- `a_cfg_scale`: 音频同步权重 (可选)
+- `e_cfg_scale`: 情感强度 (可选)
+- `no_crop`: 是否跳过裁剪 (可选)
+
+**响应:**
+- 成功: 返回生成的视频文件
+- 失败: 返回错误信息
+
+### Web接口
+
+**POST** `/generate`
+
+**请求参数:**
+- `image`: 参考图像文件
+- `text`: 要说的文本
+- `voice`: 音色选择
+- `prompt`: 提示词 (可选)
+- `userId`: 用户ID (可选)
+- `digitalHumanId`: 数字人ID (可选)
+
+**响应:**
+```json
+{
+    "success": true,
+    "videoData": "base64编码的视频数据"
 }
 ```
 
-## Related Works
-- [StyleLipSync: Style-based Personalized Lip-sync Video Generation](https://arxiv.org/abs/2305.00521)<br>
-- [StyleTalker: One-shot Style-based Audo-driven Talking Head Video Generation](https://arxiv.org/abs/2208.10922)<br>
-- [Export3D: Learning to Generate Conditional Tri-plane for 3D-aware Expression Controllable Portrait Animation](https://arxiv.org/abs/2404.00636)<br>
+## 📁 项目结构
 
-## Acknowledgements
+```
+float/
+├── models/                 # 模型定义
+│   ├── float/             # FLOAT模型核心
+│   ├── wav2vec2.py        # 音频特征提取
+│   └── wav2vec2_ser.py    # 语音情感识别
+├── options/               # 配置选项
+├── checkpoints/           # 模型权重
+├── assets/               # 示例资源
+├── results/              # 输出结果
+├── template/             # Web模板
+├── tts/                  # 文本转语音
+├── asr/                  # 语音识别
+├── memory/               # 用户历史记录
+├── generate.py           # 核心推理脚本
+├── web_server.py         # Web服务器
+├── api_server.py         # API服务器
+├── gradio_dev_communicate_rapid.py  # Gradio演示
+└── requirements.txt      # 依赖列表
+```
 
-The source images and audio are collected from the internet and other baselines, such as SadTalker, EMO, VASA-1, Hallo, LivePortrait, Loopy, and others. We appreciate their valuable contributions to this field. We employ Wav2Vec2.0-based speech emotion recognizer by [Rob Field](https://huggingface.co/r-f/wav2vec-english-speech-emotion-recognition). We appreciate this good work.
+## 🎯 使用示例
+
+### 1. 基础视频生成
+
+```python
+from generate import InferenceAgent, InferenceOptions
+
+# 初始化
+opt = InferenceOptions().parse()
+opt.ckpt_path = "./checkpoints/float.pth"
+agent = InferenceAgent(opt)
+
+# 生成视频
+agent.run_inference(
+    res_video_path="./results/output.mp4",
+    ref_path="./assets/difa.jpg",
+    audio_path="./assets/test.m4a",
+    emo="happy",
+    a_cfg_scale=2.0,
+    e_cfg_scale=0
+)
+```
+
+### 2. 批量处理
+
+```python
+import os
+from pathlib import Path
+
+# 批量处理图像和音频
+image_dir = Path("./input_images")
+audio_dir = Path("./input_audio")
+output_dir = Path("./output_videos")
+
+for img_path in image_dir.glob("*.jpg"):
+    audio_path = audio_dir / f"{img_path.stem}.wav"
+    if audio_path.exists():
+        output_path = output_dir / f"{img_path.stem}.mp4"
+        agent.run_inference(
+            res_video_path=str(output_path),
+            ref_path=str(img_path),
+            audio_path=str(audio_path),
+            emo="auto"
+        )
+```
+
+## 🔧 高级配置
+
+### 自定义模型参数
+
+```python
+# 修改推理参数
+opt.nfe = 20              # 增加推理步数提高质量
+opt.a_cfg_scale = 3.0     # 增强音频同步
+opt.e_cfg_scale = 1.5     # 增强情感表达
+```
+
+### 性能优化
+
+```python
+# 使用混合精度推理
+with torch.cuda.amp.autocast():
+    result = agent.run_inference(...)
+
+# 批处理推理
+batch_data = [data1, data2, data3]
+results = agent.batch_inference(batch_data)
+```
+
+## 🐛 常见问题
+
+### Q: 生成的视频底部有黑色区域？
+A: 这是正常现象，模型只生成人脸区域。如需完整背景，可以：
+- 使用 `--no_crop` 参数
+- 后期合成背景图像
+- 调整输出分辨率
+
+### Q: 音频同步效果不好？
+A: 可以尝试：
+- 增加 `a_cfg_scale` 参数值
+- 使用更清晰的音频文件
+- 调整音频采样率
+
+### Q: 情感表达不够明显？
+A: 可以尝试：
+- 增加 `e_cfg_scale` 参数值
+- 选择更明确的情感类型
+- 使用情感更丰富的音频
+
+### Q: 生成速度慢？
+A: 可以尝试：
+- 减少 `nfe` 参数值
+- 使用更小的输入分辨率
+- 确保GPU内存充足
+
+## 🤝 贡献指南
+
+1. Fork 项目
+2. 创建特性分支 (`git checkout -b feature/AmazingFeature`)
+3. 提交更改 (`git commit -m 'Add some AmazingFeature'`)
+4. 推送到分支 (`git push origin feature/AmazingFeature`)
+5. 打开 Pull Request
+
+## 📄 许可证
+
+本项目采用 MIT 许可证 - 查看 [LICENSE.md](LICENSE.md) 文件了解详情。
+
+## 🙏 致谢
+
+- 感谢所有开源项目的贡献者
+- 感谢社区用户的支持和反馈
+- 感谢研究团队的技术支持
+
+## 📞 联系我们
+
+- 项目主页: [GitHub Repository]
+- 问题反馈: [Issues]
+- 邮箱: [your-email@example.com]
+
+---
+
+<div align="center">
+  <p>⭐ 如果这个项目对您有帮助，请给我们一个星标！</p>
+</div>
