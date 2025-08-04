@@ -25,7 +25,7 @@ def deepseek_chat(prompt,text_with_history,max_emotion_level=5):
     )
     # print(response.choices[0].message.content)
     message = response.choices[0].message
-    print("message",message)
+    # print("message",message)
     content = message.content
     print("大模型生成的内容content",content)
     return content

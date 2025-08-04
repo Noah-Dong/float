@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>与数字人对话</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: #555;
+        }
+        textarea {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 16px;
+            height: 100px;
+            resize: vertical;
+        }
+        button {
+            background-color: #007bff;
+            color: white;
+            padding: 12px 30px;
+            border: none;
+            border-radius: 5px;
+            font-size: 16px;
+            cursor: pointer;
+            width: 100%;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        button:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+        }
+        .video-container {
+            position: relative;
+            width: 100%;
+            max-width: 600px;
+            margin: 20px auto;
+        }
+        .video-wrapper {
+            position: relative;
+            width: 100%;
+        }
+        .video-wrapper video {
+            width: 100%;
+            height: auto;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        .loading {
+            text-align: center;
+            display: none;
+            margin: 20px 0;
+        }
+        .result {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 5px;
+            display: none;
+        }
+        .error {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div style="text-align: left; margin-bottom: 20px;">
+            <button type="button" onclick="window.location.href='/setAvatar'" style="width: auto; padding: 8px 15px; font-size: 14px;">返回</button>
+        </div>
+        
+        <h1>与数字人对话</h1>
+        
+        <div class="video-container">
+            <div class="video-wrapper">
+                <video id="digitalHuman" controls>
+                    您的浏览器不支持视频播放。
+                </video>
+            </div>
+        </div>
+        
+        <form id="chatForm">
+            <div class="form-group">
+                <label for="text">对话内容:</label>
+                <textarea id="text" name="text" placeholder="请输入对话内容..." required></textarea>
+            </div>
+            <div class="form-group">
+                <label>语音输入:</label>
+                <button type="button" id="recordBtn">🎤 开始录音</button>
+                <span id="recordStatus" style="margin-left:10px;color:#007bff;"></span>
+            </div>
+            
+            <button type="submit" id="submitBtn">与数字人对话</button>
+        </form>
+        
+        <div class="loading" id="loading">
+            <p>正在生成回应，请稍候...</p>
+        </div>
+        
+        <div id="result" class="result"></div>
+    </div>
+    
+    <script>
+        // 页面加载时检查是否有设置
+        window.addEventListener('load', function() {
+            const image = sessionStorage.getItem('avatarImage');
+            const voice = sessionStorage.getItem('avatarVoice');
+            const initialVideo = sessionStorage.getItem('initialVideo');
+            
+            if (!image || !voice) {
+                alert('请先设置数字人形象');
+                window.location.href = '/setAvatar';
+                return;
+            }
+
+            // 显示初始视频
+            if (initialVideo) {
+                const video = document.getElementById('digitalHuman');
+                video.src = 'data:video/mp4;base64,' + initialVideo;
+                video.play();
+            }
+        });
+        
+        // 表单提交
+        document.getElementById('chatForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const text = document.getElementById('text').value;
+            const submitBtn = document.getElementById('submitBtn');
+            const loading = document.getElementById('loading');
+            const result = document.getElementById('result');
+            
+            if (text.trim().length === 0) {
+                result.textContent = '请输入对话内容';
+                result.className = 'result error';
+                result.style.display = 'block';
+                return;
+            }
+            
+            try {
+                submitBtn.disabled = true;
+                loading.style.display = 'block';
+                result.style.display = 'none';
+                
+                // 构建FormData
+                const formData = new FormData();
+                
+                // 从sessionStorage获取图片数据并转换回File对象
+                const imageDataUrl = sessionStorage.getItem('avatarImage');
+                const imageBlob = await fetch(imageDataUrl).then(r => r.blob());
+                formData.append('image', imageBlob, 'avatar.png');
+                
+                formData.append('text', text);
+                formData.append('voice', sessionStorage.getItem('avatarVoice'));
+                formData.append('prompt', sessionStorage.getItem('avatarPrompt'));
+                formData.append('userId', sessionStorage.getItem('userId'));
+                formData.append('digitalHumanId', sessionStorage.getItem('digitalHumanId'));
+                
+                // 调用生成API
+                const response = await fetch('/generate', {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                const data = await response.json();
+                
+                if (data.success && data.videoData) {
+                    const video = document.getElementById('digitalHuman');
+                    video.src = 'data:video/mp4;base64,' + data.videoData;
+                    video.play();
+                } else {
+                    throw new Error(data.message || '生成失败');
+                }
+                
+            } catch (error) {
+                result.textContent = error.message;
+                result.className = 'result error';
+                result.style.display = 'block';
+            } finally {
+                submitBtn.disabled = false;
+                loading.style.display = 'none';
+            }
+        });
+
+        /* 语音录制 */
+        (function(){
+            const recordBtn = document.getElementById('recordBtn');
+            const statusSpan = document.getElementById('recordStatus');
+            let mediaRecorder;
+            let chunks = [];
+
+            if(!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia){
+                recordBtn.disabled = true;
+                statusSpan.textContent = '浏览器不支持麦克风';
+                return;
+            }
+
+            navigator.mediaDevices.getUserMedia({audio:true}).then(stream=>{
+                mediaRecorder = new MediaRecorder(stream);
+
+                recordBtn.addEventListener('click', ()=>{
+                    if(mediaRecorder.state === 'inactive'){
+                        chunks = [];
+                        mediaRecorder.start();
+                        recordBtn.textContent = '停止录音';
+                        statusSpan.textContent = '录音中...';
+                    }else if(mediaRecorder.state === 'recording'){
+                        mediaRecorder.stop();
+                        recordBtn.textContent = '🎤 开始录音';
+                        statusSpan.textContent = '';
+                    }
+                });
+
+                mediaRecorder.ondataavailable = e => chunks.push(e.data);
+                mediaRecorder.onstop = async ()=>{
+                    const blob = new Blob(chunks, {type: 'audio/webm'});
+                    const formData = new FormData();
+                    formData.append('audio', blob, 'record.webm');
+                    try{
+                        const resp = await fetch('/asr', {method:'POST', body: formData});
+                        const data = await resp.json();
+                        if(data.success){
+                            const textArea = document.getElementById('text');
+                            textArea.value = data.text;
+                            // 自动触发表单提交
+                            document.getElementById('chatForm').requestSubmit();
+                        }else{
+                            alert('ASR失败: '+data.message);
+                        }
+                    }catch(err){
+                        alert('ASR请求错误');
+                    }
+                };
+            }).catch(()=>{
+                recordBtn.disabled = true;
+                statusSpan.textContent = '无法访问麦克风';
+            });
+        })();
+    </script>
+</body>
+</html> 

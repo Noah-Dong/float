@@ -35,9 +35,8 @@ async def generate_avatar_api(
     max_emotion_level: float = Form(5),
     no_crop: bool = Form(False),
     role: str = Form("魅力女友"),
-    # prompt: str = Form("你的名字叫蒂法，性别为女"),
-    # user_id: str = Form(""),
-    text: str = Form("你好~很高兴认识你哦")
+    text: str = Form(...),
+    audio_file: UploadFile = File(None),  # 新增：可选的音频文件
 ):
     # 1. 保存图片到临时文件夹
     tmp_dir = f"./results/api_{uuid.uuid4().hex}"
@@ -45,12 +44,21 @@ async def generate_avatar_api(
     ref_path = os.path.join(tmp_dir, "ref.png")
     with open(ref_path, "wb") as f:
         shutil.copyfileobj(ref_image.file, f)
-    tts_start_time = time.time()
-    # 2. 生成音频（TTS，异步调用）
-    vt = voice_type_dict.get(role, "zh_female_meilinvyou_moon_bigtts")
-    aud_path = await tts_long.batch_query(text, vt)  # 返回音频路径
-    tts_end_time = time.time()
-    print(f"TTS耗时: {tts_end_time - tts_start_time} 秒")
+
+    # 2. 处理音频：如果上传了音频文件就用它，否则用TTS生成
+    if audio_file and audio_file.filename:
+        print("使用上传的音频文件")
+        aud_path = os.path.join(tmp_dir, "input.wav")
+        with open(aud_path, "wb") as f:
+            shutil.copyfileobj(audio_file.file, f)
+    else:
+        print("使用TTS生成音频")
+        tts_start_time = time.time()
+        vt = voice_type_dict.get(role, "zh_female_meilinvyou_moon_bigtts")
+        aud_path = await tts_long.batch_query(text, vt)
+        tts_end_time = time.time()
+        print(f"TTS耗时: {tts_end_time - tts_start_time} 秒")
+
     # 3. 生成视频输出路径
     out_path = os.path.join(tmp_dir, "output.mp4")
 
