@@ -8,6 +8,12 @@
 
 FLOAT 是一个基于深度学习的数字人视频生成系统，能够根据参考图像和音频输入，生成逼真的说话人视频。该系统支持多种情感表达，提供多种部署方式，适用于数字人直播、虚拟主播、AI助手等场景。
 
+本项目是对FLOAT的复现与工程化，后者用于给数字人agent项目（位于/mnt/cfs1/dongfangzhou/digital-human-simple/digital-human-go）提供float生成视频与llm的接口。      
+运行接口的方法：    
+        python  run_server.py (运行float模型的接口，host="0.0.0.0", port=8000)
+        python  llm/deepseek_chat_api.py(运行deepseek llm的接口，Deepseek Chat API 启动于: http://0.0.0.0:8010)
+
+
 ### ✨ 主要特性
 
 - 🎭 **多模态生成**: 支持图像+音频的端到端视频生成
@@ -88,14 +94,21 @@ chmod +x download_checkpoints.sh
 ### 命令行使用
 
 ```bash
-python generate.py \
-    --ref_path assets/difa.jpg \
-    --aud_path assets/test.m4a \
-    --emo happy \
-    --res_dir ./results \
-    --ckpt_path ./checkpoints/float.pth
+CUDA_VISIBLE_DEVICES=1 python generate.py   
+    --ref_path assets/sam_altman.webp  
+    --aud_path assets/aud-sample-vs-1.wav    
+    --seed  15  
+    --a_cfg_scale 2  
+    --e_cfg_scale 1 
+    --ckpt_path ./checkpoints/float.pth  
+```
+### API服务
+
+```bash
+python run_server.py(本质上是调用api_server.py)
 ```
 
+API服务运行在 `http://localhost:8000`。
 ### Web界面
 
 ```bash
@@ -112,13 +125,7 @@ python gradio_dev_communicate_rapid.py
 
 访问 `http://localhost:7860` 使用Gradio界面。
 
-### API服务
 
-```bash
-python api_server.py
-```
-
-API服务运行在 `http://localhost:8000`。
 
 ## 📚 使用指南
 
@@ -222,52 +229,6 @@ float/
 └── requirements.txt      # 依赖列表
 ```
 
-## 🎯 使用示例
-
-### 1. 基础视频生成
-
-```python
-from generate import InferenceAgent, InferenceOptions
-
-# 初始化
-opt = InferenceOptions().parse()
-opt.ckpt_path = "./checkpoints/float.pth"
-agent = InferenceAgent(opt)
-
-# 生成视频
-agent.run_inference(
-    res_video_path="./results/output.mp4",
-    ref_path="./assets/difa.jpg",
-    audio_path="./assets/test.m4a",
-    emo="happy",
-    a_cfg_scale=2.0,
-    e_cfg_scale=0
-)
-```
-
-### 2. 批量处理
-
-```python
-import os
-from pathlib import Path
-
-# 批量处理图像和音频
-image_dir = Path("./input_images")
-audio_dir = Path("./input_audio")
-output_dir = Path("./output_videos")
-
-for img_path in image_dir.glob("*.jpg"):
-    audio_path = audio_dir / f"{img_path.stem}.wav"
-    if audio_path.exists():
-        output_path = output_dir / f"{img_path.stem}.mp4"
-        agent.run_inference(
-            res_video_path=str(output_path),
-            ref_path=str(img_path),
-            audio_path=str(audio_path),
-            emo="auto"
-        )
-```
-
 ## 🔧 高级配置
 
 ### 自定义模型参数
@@ -279,16 +240,6 @@ opt.a_cfg_scale = 3.0     # 增强音频同步
 opt.e_cfg_scale = 1.5     # 增强情感表达
 ```
 
-### 性能优化
-
-```python
-# 使用混合精度推理
-with torch.cuda.amp.autocast():
-    result = agent.run_inference(...)
-
-# 批处理推理
-batch_data = [data1, data2, data3]
-results = agent.batch_inference(batch_data)
 ```
 
 ## 🐛 常见问题
@@ -310,12 +261,6 @@ A: 可以尝试：
 - 增加 `e_cfg_scale` 参数值
 - 选择更明确的情感类型
 - 使用情感更丰富的音频
-
-### Q: 生成速度慢？
-A: 可以尝试：
-- 减少 `nfe` 参数值
-- 使用更小的输入分辨率
-- 确保GPU内存充足
 
 ## 🤝 贡献指南
 
